@@ -108,4 +108,10 @@ public class NormalUser extends User {
         }
     }
 
-} 
+    public void setIsblocked(int i) {
+        this.isBlocked = i;
+    }
+    public Integer getIsblocked() {
+        return isBlocked;
+    }
+}
