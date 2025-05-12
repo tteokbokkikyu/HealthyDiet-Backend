@@ -26,4 +26,15 @@ public class JsonUtils {
             return null;
         }
     }
+    public static <T> String toJsonMsg(int code, T data ,String msg_type)
+    {
+        if (code%2==0)
+        {
+            return "{\"code\":" + code +",\"status\":200"+ ",\""+msg_type+"\":"+ toJson(data)+"}";
+        }
+        else {
+            return "{\"code\":" + code+ ",\"status\":400" + ",\""+msg_type+"\":"+ toJson(data)+"}";
+        }
+
+    }
 }
