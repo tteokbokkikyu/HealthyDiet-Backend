@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hd.hd_backend.mapper.FoodMapper">
+    <select id="findAll" resultType="com.hd.hd_backend.entity.FoodItem" >
+        SELECT * FROM healthy_diet.food_item
+    </select>
+
+    <select id="findByName" resultType="com.hd.hd_backend.entity.FoodItem" >
+        SELECT * FROM healthy_diet.food_item WHERE name = #{name}
+    </select>
+
+    <insert id="insert" parameterType="com.hd.hd_backend.entity.FoodItem">
+        INSERT INTO food_item (
+            name, type, calories, fat, protein, carbohydrates,
+            dietary_fiber, potassium, sodium
+        )
+        VALUES (
+                   #{name}, #{type}, #{calories}, #{fat}, #{protein},
+                   #{carbohydrates}, #{dietaryFiber}, #{potassium}, #{sodium}
+               )
+    </insert>
+
+    <update id="update" parameterType="com.hd.hd_backend.entity.FoodItem">
+        UPDATE food_item
+        SET
+            name = #{name},
+            type = #{type},
+            calories = #{calories},
+            fat = #{fat},
+            protein = #{protein},
+            carbohydrates = #{carbohydrates},
+            dietary_fiber = #{dietaryFiber},
+            potassium = #{potassium},
+            sodium = #{sodium}
+        WHERE foodid = #{foodid}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM food_item WHERE foodid = #{foodId}
+    </delete>
+
+    <select id="findById" resultType="com.hd.hd_backend.entity.FoodItem">
+        SELECT * FROM food_item WHERE foodid = #{foodId}
+    </select>
+
+    <select id="findByNameLike" resultType="com.hd.hd_backend.entity.FoodItem">
+        SELECT * FROM food_item WHERE name LIKE #{name} LIMIT 1
+    </select>
+
+</mapper>
