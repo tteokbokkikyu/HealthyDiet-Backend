@@ -1,7 +1,7 @@
 package com.hd.hd_backend.entity;
 
 public class User {
-    Integer id;
+    Integer userId;
     String  name;
     String password;
     String profilePicture;
@@ -26,12 +26,9 @@ public void setPhone(String phone) {
     public void setProfilePicture(String profilePicture) {
         this.profilePicture = profilePicture;
     }
-    public Integer getId() {
-        return id;
-    }
-    public void setId(int id) {
-        this.id = id;
-    }
+    public Integer getUserId() {return userId;}
+    public void setUserId(Integer userid) {this.userId = userid;}
+
     public String getName() {
         return name;
     }
@@ -48,6 +45,7 @@ public void setPhone(String phone) {
     public User() {
 
     }
+
 
 
 }

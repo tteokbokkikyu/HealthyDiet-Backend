@@ -12,7 +12,7 @@ public class UserDTO {
     private String password;
     
     @Schema(description = "体重(kg)")
-    private Integer weight;
+    private Double weight;
     
     @Schema(description = "年龄")
     private Integer age;
@@ -45,11 +45,11 @@ public class UserDTO {
         this.password = password;
     }
 
-    public Integer getWeight() {
+    public Double getWeight() {
         return weight;
     }
 
-    public void setWeight(Integer weight) {
+    public void setWeight(Double weight) {
         this.weight = weight;
     }
 
