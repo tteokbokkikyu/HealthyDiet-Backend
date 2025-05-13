@@ -1,17 +1,21 @@
 package com.hd.hd_backend.mapper;
 
 import com.hd.hd_backend.entity.NormalUser;
+import com.hd.hd_backend.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 @Mapper
 public interface UserMapper {
-
-    NormalUser findByName(@Param("name") String name);
-    NormalUser findByPhone(@Param("phone") String phone);
+    User findByName(@Param("name") String name);
+    User findByPhone(@Param("phone") String phone);
     NormalUser findById(@Param("id") Integer id);
-    void insert(NormalUser user);
-    void blockById (@Param("id") int id);
+    void insertNormalUser(NormalUser user);
+    int insertUser(User user);
+    void blockById(@Param("userId") Integer userId);
     void update(NormalUser user);
-
+    List<NormalUser> findAllNormalUsers();
+    void unblockById(@Param("userId") Integer userId);
 } 
