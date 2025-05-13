@@ -30,7 +30,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        System.out.println("文本消息"); // 输出解析后的用户信息
+        //System.out.println("文本消息"); // 输出解析后的用户信息
         String payload = message.getPayload();
         // 解析消息并执行相应的操作
         // 假设消息格式为 "action:payload"

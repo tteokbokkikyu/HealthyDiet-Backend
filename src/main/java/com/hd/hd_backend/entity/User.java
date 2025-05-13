@@ -1,5 +1,9 @@
 package com.hd.hd_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+
 public class User {
     Integer id;
     String  name;

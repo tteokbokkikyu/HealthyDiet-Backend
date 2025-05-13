@@ -2,6 +2,7 @@ package com.hd.hd_backend.utils;
 import org.springframework.web.socket.WebSocketSession;
 import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketSessionManager {
+
     private static final ConcurrentHashMap<Integer, WebSocketSession> USER_SESSIONS = new ConcurrentHashMap<>();
 
     public static void addSession(Integer userId, WebSocketSession session) {
@@ -14,5 +15,9 @@ public class WebSocketSessionManager {
 
     public static void removeSession(Integer userId) {
         USER_SESSIONS.remove(userId);
+    }
+
+    public static void removeAllSessions() {
+        USER_SESSIONS.clear();
     }
 }
