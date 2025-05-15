@@ -4,36 +4,36 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FoodRecord {
 
-    private int foodRecordId;
+    private Integer foodRecordId;
 
     private String recordTime;
 
-    private int userId;
+    private Integer userId;
 
-    private int foodId;
+    private Integer foodId;
 
-    private double foodWeight;
+    private Double foodWeight;
 
-    private int calories;
+    private Integer calories;
 
-    private double fat;
+    private Double fat;
 
-    private double protein;
+    private Double protein;
 
-    private double carbohydrates;
+    private Double carbohydrates;
 
-    private double sodium;
+    private Double sodium;
 
-    private double potassium;
+    private Double potassium;
 
-    private double dietaryFiber;
+    private Double dietaryFiber;
 
     // Getters and Setters
-    public int getFoodRecordId() {
+    public Integer getFoodRecordId() {
         return foodRecordId;
     }
 
-    public void setFoodRecordId(int foodRecordId) {
+    public void setFoodRecordId(Integer foodRecordId) {
         this.foodRecordId = foodRecordId;
     }
 
@@ -45,15 +45,15 @@ public class FoodRecord {
         this.recordTime = recordTime;
     }
 
-    public int getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
-    public int getFoodId() {
+    public Integer getFoodId() {
         return foodId;
     }
 
@@ -61,67 +61,67 @@ public class FoodRecord {
         this.foodId = foodId;
     }
 
-    public double getFoodWeight() {
+    public Double getFoodWeight() {
         return foodWeight;
     }
 
-    public void setFoodWeight(double foodWeight) {
+    public void setFoodWeight(Double foodWeight) {
         this.foodWeight = foodWeight;
     }
 
-    public int getCalories() {
+    public Integer getCalories() {
         return calories;
     }
 
-    public void setCalories(int calories) {
+    public void setCalories(Integer calories) {
         this.calories = calories;
     }
 
-    public double getFat() {
+    public Double getFat() {
         return fat;
     }
 
-    public void setFat(double fat) {
+    public void setFat(Double fat) {
         this.fat = fat;
     }
 
-    public double getProtein() {
+    public Double getProtein() {
         return protein;
     }
 
-    public void setProtein(double protein) {
+    public void setProtein(Double protein) {
         this.protein = protein;
     }
 
-    public double getCarbohydrates() {
+    public Double getCarbohydrates() {
         return carbohydrates;
     }
 
-    public void setCarbohydrates(double carbohydrates) {
+    public void setCarbohydrates(Double carbohydrates) {
         this.carbohydrates = carbohydrates;
     }
 
-    public double getSodium() {
+    public Double getSodium() {
         return sodium;
     }
 
-    public void setSodium(double sodium) {
+    public void setSodium(Double sodium) {
         this.sodium = sodium;
     }
 
-    public double getPotassium() {
+    public Double getPotassium() {
         return potassium;
     }
 
-    public void setPotassium(double potassium) {
+    public void setPotassium(Double potassium) {
         this.potassium = potassium;
     }
 
-    public double getDietaryFiber() {
+    public Double getDietaryFiber() {
         return dietaryFiber;
     }
 
-    public void setDietaryFiber(double dietaryFiber) {
+    public void setDietaryFiber(Double dietaryFiber) {
         this.dietaryFiber = dietaryFiber;
     }
 
