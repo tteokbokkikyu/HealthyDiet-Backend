@@ -337,6 +337,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.WEIGHT_LATEST_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
                 }
                 break;
+                
             default:
                 session.sendMessage(new TextMessage("未知操作"));
         }
