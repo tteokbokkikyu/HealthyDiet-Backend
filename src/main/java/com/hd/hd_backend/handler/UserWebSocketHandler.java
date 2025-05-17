@@ -25,13 +25,15 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
     private FoodService foodService;
     @Autowired
     private WeightService weightService;
+    @Autowired
+    private ExerciseService exerciseService;
 
     private final ObjectMapper objectMapper = new ObjectMapper(); // 创建 ObjectMapper 实例
-    private boolean isTestMode = false;
+//    private boolean isTestMode = false;
 
-    public void setTestMode(boolean testMode) {
-        this.isTestMode = testMode;
-    }
+//    public void setTestMode(boolean testMode) {
+//        this.isTestMode = testMode;
+//    }
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         System.out.println("Received message: " + message.getPayload());
@@ -42,14 +44,14 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
         String[] parts = payload.split(":", 2); // 限制分割为 2 部分
         String action = parts[0];
 
-        if (payload.contains("testModeOn")) {
-            this.isTestMode = true;
-            return;
-        }
-        if (payload.contains("testModeOff")) {
-            this.isTestMode = false;
-            return;
-        }
+//        if (payload.contains("testModeOn")) {
+//            this.isTestMode = true;
+//            return;
+//        }
+//        if (payload.contains("testModeOff")) {
+//            this.isTestMode = false;
+//            return;
+//        }
 
         switch (action) {
             case "register":{
@@ -151,7 +153,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 }
                 break;
             case "getAllFoodRecord":
-                if (!isTestMode && !session.getAttributes().containsKey("userId")) {
+                if (!session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(),
                             "用户未登录",
@@ -196,7 +198,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 }
                 break;
             case "addFoodRecord":
-                if (!isTestMode && !session.getAttributes().containsKey("userId")) {
+                if (!session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(),
                             "用户未登录",
@@ -223,7 +225,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                                     "error_message")));
                             break;
                         }
-
+                        foodService.addFoodRecord(foodRecord);
                         session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_RECORD_ADD_SUCCESS.ordinal(),"食物记录添加成功","message")) );
                     } catch (Exception e) {
                         session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_RECORD_ADD_FAIL.ordinal(),e.getMessage(),"error_message")) );
@@ -264,7 +266,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
 //                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(), "用户未登录","error_message")) );
 //                    break;
 //                }
-                if (!isTestMode && !session.getAttributes().containsKey("userId")) {
+                if ( !session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(),
                             "用户未登录",
@@ -395,6 +397,108 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.WEIGHT_LATEST_GET_SUCCESS.ordinal(), weight,"data")));
                 } catch (Exception e) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.WEIGHT_LATEST_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "getAllExerciseItem":
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_FAIL.ordinal(),"用户未登录","error_message")) );
+                }
+                else{
+                    try {
+                        List<ExerciseItem> exercises= exerciseService.getAllExerciseItem();
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_SUCCESS.ordinal(),exercises,"data")) );
+                    }
+                    catch (Exception e) {
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_FAIL.ordinal(),"食物未找到","error_message")) );
+                    }
+
+                }
+                break;
+            case "addExerciseItem":
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_ITEM_ADD_FAIL.ordinal(),"用户未登录","error_message")) );
+                }
+                else{
+                    if (parts.length > 1) {
+                        try{
+                            ExerciseItem newExerciseItem = JsonUtils.fromJson(parts[1], ExerciseItem.class);
+                            exerciseService.addExerciseItem(newExerciseItem);
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_ITEM_ADD_SUCCESS.ordinal(),"添加成功","message")) );
+
+                        }
+                        catch (Exception e) {
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_ITEM_ADD_FAIL.ordinal(),"添加失败","error_message")) );
+                        }
+
+                    }
+                }
+                break;
+
+            case "addExerciseRecord":
+                ExerciseRecord exerciseRecord = JsonUtils.fromJson(parts[1], ExerciseRecord.class);
+
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_ADD_FAIL.ordinal(),"用户未登录","error_message")) );
+                }
+                else{
+                    if (parts.length > 1) {
+                        try{
+                            int user_id= Integer.parseInt(session.getAttributes().get("userId").toString());
+                            exerciseRecord.setUserId(user_id);
+                            exerciseService.addExerciseRecord(exerciseRecord);
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_ADD_SUCCESS.ordinal(),"success","message")) );
+
+                        }
+                        catch (Exception e){
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_ADD_FAIL.ordinal(),"添加失败","error_message")) );
+                        }
+
+                    }
+                }
+                break;
+
+            case "getUserExerciseRecord":
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"请先登录","error_message")) );
+
+                }
+                else{
+                    if (parts.length > 1) {
+                        try {
+                            int user_id= Integer.parseInt(session.getAttributes().get("userId").toString());
+                            List<ExerciseRecordDTO> exercises= exerciseService.getUserExerciseRecord(user_id);
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_SUCCESS.ordinal(),exercises,"data")) );
+
+                        }
+                        catch (Exception e) {
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"用户未登录","error_message")) );
+                            System.out.println(e.getMessage());
+
+                        }
+                    }
+                    else {
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"获取失败","error_message")) );
+                    }
+                }
+                break;
+            case "deleteExerciseRecord":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), "用户未登录","error_message")) );
+
+                    break;
+                }
+
+                try {
+                    int recordId = Integer.parseInt(parts[1]);
+                    exerciseService.deleteExerciseRecord(recordId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_SUCCESS.ordinal(),  "运动记录删除成功","message")) );
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), e.getMessage(),"error_message")) );
+
                 }
                 break;
             default:
