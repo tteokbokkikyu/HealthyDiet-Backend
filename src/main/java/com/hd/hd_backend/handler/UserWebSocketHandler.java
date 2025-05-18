@@ -37,8 +37,6 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
         String[] parts = payload.split(":", 2); // 限制分割为 2 部分
         String action = parts[0];
 
-
-
         switch (action) {
             case "register":{
                 //userDTO = parseUserDTO(parts[1]);
@@ -47,9 +45,6 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     System.out.println("解析后的用户信息: " + normalUser ); // 输出解析后的用户信息
                     try {
                         NormalUser user = userService.register(normalUser );
-
-
-
 
                         session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.REGISTER_SUCCESS.ordinal(),user,"user")) );
 

@@ -18,26 +18,7 @@ public class UserServiceImpl implements UserService {
     private WeightMapper weightMapper;
     @Override
     public NormalUser register(NormalUser normalUser) throws Exception {
-        // 检查用户名是否已存在
-//        if (userMapper.findByName(userDTO.getName()) != null) {
-//            throw new Exception("用户名已存在");
-//        }
 
-        // 数据验证
-
-
-        // 创建新用户
-//        NormalUser user = new NormalUser();
-//        user.setName(normalUser.getName());
-//        user.setPassword(normalUser.getPassword());  // 实际应用中应该加密存储
-//        user.setWeight(normalUser.getWeight());
-//        user.setAge(normalUser.getAge());
-//        user.setHeight(normalUser.getHeight());
-//        user.setPhone(normalUser.getPhone());
-//        user.setIsBlocked(0);  // 新用户未被封禁
-//        user.setProfilePicture("https://img1.baidu.com/it/u=534429813,2995452219&fm=253&fmt=auto?w=800&h=800");
-//        user.setGender(normalUser.getGender());
-//        user.setActivityFactor(normalUser.getActivityFactor());
         // 保存到数据库
         userMapper.insertUser(normalUser);
         int id=userMapper.findByPhone(normalUser.getPhone()).getId();
@@ -65,7 +46,6 @@ public class UserServiceImpl implements UserService {
             throw new Exception("密码不能为空");
         }
 
-
         // 通过手机号查找用户
         User user = userMapper.findByPhone(normalUser.getPhone());
         if (user == null) {
@@ -80,20 +60,12 @@ public class UserServiceImpl implements UserService {
         if (user.getIsAdmin() == 0)
         {
             NormalUser normal=userMapper.findById(user.getId());
-            // 检查账号状态
-//            if (normal.getIsBlocked() == 1) {
-//                throw new Exception("账号已被封禁");
-//            }
-
             return normal;
-
         }
         else
         {
             return user;
         }
-
-
     }
 
     @Override

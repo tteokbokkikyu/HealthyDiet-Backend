@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hd.hd_backend.entity.NormalUser;
 import com.hd.hd_backend.entity.User;
 import com.hd.hd_backend.handler.UserWebSocketHandler;
+import com.hd.hd_backend.mapper.UserMapper;
 import com.hd.hd_backend.service.UserService;
 import com.hd.hd_backend.utils.JsonUtils;
 import com.hd.hd_backend.utils.WebSocketCode;
@@ -37,7 +38,7 @@ public class UserWebsocketHandlerTest {
     private UserWebSocketHandler handler;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
+    private UserMapper userMapper;
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -87,29 +88,53 @@ public class UserWebsocketHandlerTest {
         assertNotNull(WebSocketSessionManager.getSession(testUser.getId()));
     }
 
+//    @Test
+//    void testHandleRegisterFailure() throws Exception {
+//        // Arrange
+//        NormalUser testUser = createTestUser();
+//        when(userService.register(any(NormalUser.class))).thenThrow(new RuntimeException("Registration failed"));
+//
+//        String registerMessage = "register:" + JsonUtils.toJson(testUser);
+//        TextMessage message = new TextMessage(registerMessage);
+//
+//        // Act
+//        handler.handleTextMessage(session, message);
+//
+//        // Assert
+//        verify(userService).register(any(NormalUser.class));
+//        verify(session).sendMessage(argThat(textMessage -> {
+//            String payload = (String) textMessage.getPayload();
+//            return payload.contains(String.valueOf(WebSocketCode.REGISTER_FAIL.ordinal())) &&
+//                    payload.contains("Registration failed");
+//        }));
+//
+//        // Verify session was NOT added to manager
+//        assertNull(WebSocketSessionManager.getSession(testUser.getId()));
+//    }
     @Test
     void testHandleRegisterFailure() throws Exception {
-        // Arrange
         NormalUser testUser = createTestUser();
-        when(userService.register(any(NormalUser.class))).thenThrow(new RuntimeException("Registration failed"));
+
+        // 模拟注册失败：比如手机号已存在，服务抛出异常
+        when(userService.register(any(NormalUser.class)))
+                .thenThrow(new Exception("手机号已存在"));
 
         String registerMessage = "register:" + JsonUtils.toJson(testUser);
         TextMessage message = new TextMessage(registerMessage);
 
-        // Act
         handler.handleTextMessage(session, message);
 
-        // Assert
         verify(userService).register(any(NormalUser.class));
         verify(session).sendMessage(argThat(textMessage -> {
             String payload = (String) textMessage.getPayload();
             return payload.contains(String.valueOf(WebSocketCode.REGISTER_FAIL.ordinal())) &&
-                    payload.contains("Registration failed");
+                    payload.contains("手机号已存在");
         }));
 
-        // Verify session was NOT added to manager
+        // 因注册失败，不应加入 session manager
         assertNull(WebSocketSessionManager.getSession(testUser.getId()));
     }
+
 
     @Test
     void testHandleLoginSuccess() throws Exception {
@@ -159,7 +184,73 @@ public class UserWebsocketHandlerTest {
         // Verify session was NOT added to manager
         assertNull(WebSocketSessionManager.getSession(testUser.getId()));
     }
+    @Test
+    public void testLoginSuccess() throws Exception {
+        User input = new User();
+        input.setPhone("12345678901");
+        input.setPassword("123456");
 
+        User mockUser = new User();
+        mockUser.setId(1);
+        mockUser.setPhone("12345678901");
+        mockUser.setPassword("123456");
+        mockUser.setIsAdmin(0);
+
+        when(userMapper.findByPhone("12345678901")).thenReturn(mockUser);
+        when(userMapper.findById(1)).thenReturn(new NormalUser());  // 返回普通用户对象
+
+        User result = userService.login(input);
+        assertNotNull(result);
+        assertEquals(1, result.getId());
+    }
+
+    @Test
+    public void testLoginFail_PhoneEmpty() {
+        User input = new User();
+        input.setPhone("");
+        input.setPassword("123456");
+
+        Exception exception = assertThrows(Exception.class, () -> userService.login(input));
+        assertEquals("手机号不能为空", exception.getMessage());
+    }
+
+    @Test
+    public void testLoginFail_PasswordEmpty() {
+        User input = new User();
+        input.setPhone("12345678901");
+        input.setPassword("");
+
+        Exception exception = assertThrows(Exception.class, () -> userService.login(input));
+        assertEquals("密码不能为空", exception.getMessage());
+    }
+
+    @Test
+    public void testLoginFail_UserNotExist() {
+        User input = new User();
+        input.setPhone("12345678901");
+        input.setPassword("123456");
+
+        when(userMapper.findByPhone("12345678901")).thenReturn(null);
+
+        Exception exception = assertThrows(Exception.class, () -> userService.login(input));
+        assertEquals("用户不存在", exception.getMessage());
+    }
+
+    @Test
+    public void testLoginFail_WrongPassword() {
+        User input = new User();
+        input.setPhone("12345678901");
+        input.setPassword("wrongpass");
+
+        User mockUser = new User();
+        mockUser.setPhone("12345678901");
+        mockUser.setPassword("correctpass");
+
+        when(userMapper.findByPhone("12345678901")).thenReturn(mockUser);
+
+        Exception exception = assertThrows(Exception.class, () -> userService.login(input));
+        assertEquals("密码错误", exception.getMessage());
+    }
     @Test
     void testHandleUpdateUserSuccess() throws Exception {
         // Arrange
