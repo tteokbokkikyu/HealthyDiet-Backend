@@ -25,13 +25,15 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
     private FoodService foodService;
     @Autowired
     private WeightService weightService;
+    @Autowired
+    private ExerciseService exerciseService;
 
     private final ObjectMapper objectMapper = new ObjectMapper(); // 创建 ObjectMapper 实例
-    private boolean isTestMode = false;
+//    private boolean isTestMode = false;
 
-    public void setTestMode(boolean testMode) {
-        this.isTestMode = testMode;
-    }
+//    public void setTestMode(boolean testMode) {
+//        this.isTestMode = testMode;
+//    }
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         System.out.println("Received message: " + message.getPayload());
@@ -42,14 +44,14 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
         String[] parts = payload.split(":", 2); // 限制分割为 2 部分
         String action = parts[0];
 
-        if (payload.contains("testModeOn")) {
-            this.isTestMode = true;
-            return;
-        }
-        if (payload.contains("testModeOff")) {
-            this.isTestMode = false;
-            return;
-        }
+//        if (payload.contains("testModeOn")) {
+//            this.isTestMode = true;
+//            return;
+//        }
+//        if (payload.contains("testModeOff")) {
+//            this.isTestMode = false;
+//            return;
+//        }
 
         switch (action) {
             case "register":{
@@ -151,7 +153,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 }
                 break;
             case "getAllFoodRecord":
-                if (!isTestMode && !session.getAttributes().containsKey("userId")) {
+                if (!session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(),
                             "用户未登录",
@@ -196,7 +198,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 }
                 break;
             case "addFoodRecord":
-                if (!isTestMode && !session.getAttributes().containsKey("userId")) {
+                if (!session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(),
                             "用户未登录",
@@ -223,7 +225,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                                     "error_message")));
                             break;
                         }
-
+                        foodService.addFoodRecord(foodRecord);
                         session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_RECORD_ADD_SUCCESS.ordinal(),"食物记录添加成功","message")) );
                     } catch (Exception e) {
                         session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_RECORD_ADD_FAIL.ordinal(),e.getMessage(),"error_message")) );
@@ -264,7 +266,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
 //                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(), "用户未登录","error_message")) );
 //                    break;
 //                }
-                if (!isTestMode && !session.getAttributes().containsKey("userId")) {
+                if ( !session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.FOOD_ITEM_ADD_FAIL.ordinal(),
                             "用户未登录",
@@ -395,6 +397,191 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.WEIGHT_LATEST_GET_SUCCESS.ordinal(), weight,"data")));
                 } catch (Exception e) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.WEIGHT_LATEST_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+
+            case "getAllExerciseItem":
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_FAIL.ordinal(),"用户未登录","error_message")) );
+                }
+                else{
+                    try {
+                        List<ExerciseItem> exercises= exerciseService.getAllExerciseItem();
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_SUCCESS.ordinal(),exercises,"data")) );
+                    }
+                    catch (Exception e) {
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_FAIL.ordinal(),"食物未找到","error_message")) );
+                    }
+
+                }
+                break;
+            case "addExerciseItem":
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_ITEM_ADD_FAIL.ordinal(),"用户未登录","error_message")) );
+                }
+                else{
+                    if (parts.length > 1) {
+                        try{
+                            ExerciseItem newExerciseItem = JsonUtils.fromJson(parts[1], ExerciseItem.class);
+                            exerciseService.addExerciseItem(newExerciseItem);
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_ITEM_ADD_SUCCESS.ordinal(),"添加成功","message")) );
+
+                        }
+                        catch (Exception e) {
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_ITEM_ADD_FAIL.ordinal(),"添加失败","error_message")) );
+                        }
+
+                    }
+                }
+                break;
+
+            case "addExerciseRecord":
+                ExerciseRecord exerciseRecord = JsonUtils.fromJson(parts[1], ExerciseRecord.class);
+
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_ADD_FAIL.ordinal(),"用户未登录","error_message")) );
+                }
+                else{
+                    if (parts.length > 1) {
+                        try{
+                            int user_id= Integer.parseInt(session.getAttributes().get("userId").toString());
+                            exerciseRecord.setUserId(user_id);
+                            exerciseService.addExerciseRecord(exerciseRecord);
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_ADD_SUCCESS.ordinal(),"success","message")) );
+
+                        }
+                        catch (Exception e){
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_ADD_FAIL.ordinal(),"添加失败","error_message")) );
+                        }
+
+                    }
+                }
+                break;
+
+            case "getUserExerciseRecord":
+                if(!session.getAttributes().containsKey("userId"))
+                {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"请先登录","error_message")) );
+
+                }
+                else{
+                    if (parts.length > 1) {
+                        try {
+                            int user_id= Integer.parseInt(session.getAttributes().get("userId").toString());
+                            List<ExerciseRecordDTO> exercises= exerciseService.getUserExerciseRecord(user_id);
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_SUCCESS.ordinal(),exercises,"data")) );
+
+                        }
+                        catch (Exception e) {
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"用户未登录","error_message")) );
+                            System.out.println(e.getMessage());
+
+                        }
+                    }
+                    else {
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"获取失败","error_message")) );
+                    }
+                }
+                break;
+            case "deleteExerciseRecord":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), "用户未登录","error_message")) );
+
+                    break;
+                }
+
+                try {
+                    int recordId = Integer.parseInt(parts[1]);
+                    exerciseService.deleteExerciseRecord(recordId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_SUCCESS.ordinal(),  "运动记录删除成功","message")) );
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), e.getMessage(),"error_message")) );
+
+                }
+                break;
+            case "identify":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_IDENTIFY_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    // 获取图片的base64编码
+                    String imageBase64 = parts[1];
+
+                    // 调用百度API识别菜品
+                    String result = APICaller.identifyDish(imageBase64, 1);  // 只取置信度最高的结果
+                    JSONObject jsonResult = new JSONObject(result);
+
+                    if (jsonResult.has("result") && jsonResult.getJSONArray("result").length() > 0) {
+                        JSONObject dish = jsonResult.getJSONArray("result").getJSONObject(0);
+                        String dishName = dish.getString("name");
+
+                        // 判断是否为"非菜"
+                        if ("非菜".equals(dishName)) {
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                                    WebSocketCode.FOOD_IDENTIFY_FAIL.ordinal(),
+                                    "未能识别到食物，请重新拍照",
+                                    "error_message"
+                            )));
+                            break;
+                        }
+
+                        double calories = dish.getDouble("calorie");
+
+                        // 修改为模糊搜索
+                        FoodItem existingFood = foodService.findByNameLike("%" + dishName + "%");
+
+                        if (existingFood != null) {
+//                            // 创建新的食物项
+//                            FoodItem newFood = new FoodItem();
+//                            newFood.setName(dishName);
+//                            newFood.setCalories((int)calories);
+//                            newFood.setType("其他");  // 默认类型
+//                            // 其他营养成分设为null
+//                            newFood.setFat(-1.0);
+//                            newFood.setProtein(-1.0);
+//                            newFood.setCarbohydrates(-1.0);
+//                            newFood.setDietaryFiber(-1.0);
+//                            newFood.setPotassium(-1.0);
+//                            newFood.setSodium(-1.0);
+//
+//                            // 保存到数据库
+//                            foodService.addFoodItem(newFood);
+
+                            // 获取插入后的完整记录，使用模糊搜索
+//                            existingFood = foodService.findByNameLike("%" + dishName + "%");
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                                    WebSocketCode.FOOD_IDENTIFY_SUCCESS.ordinal(),
+                                    existingFood,
+                                    "data"
+                            )));
+                        }
+
+                        // 返回食物信息给前端
+                        else {
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                                    WebSocketCode.FOOD_IDENTIFY_FAIL.ordinal(),
+                                    "未能识别菜品",
+                                    "error_message"
+                            )));
+                        }
+
+                    } else {
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                                WebSocketCode.FOOD_IDENTIFY_FAIL.ordinal(),
+                                "未能识别菜品",
+                                "error_message"
+                        )));
+                    }
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.FOOD_IDENTIFY_FAIL.ordinal(),
+                            "识别失败: " + e.getMessage(),
+                            "error_message"
+                    )));
                 }
                 break;
             default:
