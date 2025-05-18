@@ -6,7 +6,7 @@ import com.hd.hd_backend.entity.FoodRecord;
 
 import java.util.List;
 
-public interface  FoodService {
+public interface FoodService {
     // FoodItem相关方法
     List<FoodItem> getAllFoodItems();
     FoodItem getFoodItemByName(String name);

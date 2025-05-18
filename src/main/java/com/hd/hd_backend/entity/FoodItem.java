@@ -26,8 +26,6 @@ public class FoodItem {
 
     private Double sodium;
 
-
-
     public void setFoodid(Integer id) {
         this.foodid = id;
     }

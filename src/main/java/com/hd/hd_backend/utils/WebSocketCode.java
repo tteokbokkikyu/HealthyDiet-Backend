@@ -58,10 +58,4 @@ public enum WebSocketCode {
     BLOCK_USER_FAIL,
     UNBLOCK_USER_SUCCESS,
     UNBLOCK_USER_FAIL,
-
-    FOOD_IDENTIFY_SUCCESS,
-    FOOD_IDENTIFY_FAIL,
-
-
-
 }
