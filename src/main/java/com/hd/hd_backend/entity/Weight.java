@@ -15,6 +15,11 @@ public class Weight {
         String time = now.format(formatter);
         this.time = time;
     }
+    public Weight(Integer userId,  Double weight,String time) {
+        this.userId = userId;
+        this.weight = weight;
+        this.time = time;
+    }
 
     // Getters and Setters
     public Integer getUserId() {

@@ -5,9 +5,11 @@ import com.hd.hd_backend.dto.*;
 import com.hd.hd_backend.entity.*;
 import com.hd.hd_backend.mapper.*;
 import com.hd.hd_backend.service.*;
+import com.hd.hd_backend.utils.APICaller;
 import com.hd.hd_backend.utils.JsonUtils;
 import com.hd.hd_backend.utils.WebSocketCode;
 import com.hd.hd_backend.utils.WebSocketSessionManager;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
@@ -502,6 +504,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
 
                 }
                 break;
+
             case "identify":
                 if (!session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.FOOD_IDENTIFY_FAIL.ordinal(), "用户未登录","error_message")));
