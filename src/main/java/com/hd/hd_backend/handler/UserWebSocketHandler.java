@@ -29,6 +29,10 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
     private WeightService weightService;
     @Autowired
     private ExerciseService exerciseService;
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    private AdminService adminService;
 
     private final ObjectMapper objectMapper = new ObjectMapper(); // 创建 ObjectMapper 实例
 //    private boolean isTestMode = false;
@@ -500,8 +504,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     exerciseService.deleteExerciseRecord(recordId);
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_SUCCESS.ordinal(),  "运动记录删除成功","message")) );
                 } catch (Exception e) {
-                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), e.getMessage(),"error_message")) );
-
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), e.getMessage(), "error_message")));
                 }
                 break;
 
@@ -583,6 +586,175 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.FOOD_IDENTIFY_FAIL.ordinal(),
                             "识别失败: " + e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+            case "createNotification":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_CREATE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Notification notification = objectMapper.readValue(parts[1], Notification.class);
+                    notification.setUserId((Integer) session.getAttributes().get("userId"));
+                    notificationService.createNotification(notification);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_CREATE_SUCCESS.ordinal(), "通知创建成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_CREATE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "deleteNotification":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_DELETE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Integer notificationId = Integer.parseInt(parts[1]);
+                    notificationService.deleteNotification(notificationId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_DELETE_SUCCESS.ordinal(), "通知删除成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_DELETE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "updateNotification":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_UPDATE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Notification notification = objectMapper.readValue(parts[1], Notification.class);
+                    notificationService.updateNotification(notification);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_UPDATE_SUCCESS.ordinal(), "通知更新成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_UPDATE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "getUserNotifications":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_GET_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Integer userId = (Integer) session.getAttributes().get("userId");
+                    List<Notification> notifications = notificationService.getUserNotifications(userId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_GET_SUCCESS.ordinal(), notifications,"data")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "markNotificationAsSent":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_MARK_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Integer notificationId = Integer.parseInt(parts[1]);
+                    notificationService.markAsSent(notificationId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_MARK_SUCCESS.ordinal(), "通知标记成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.NOTIFICATION_MARK_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "updateAdmin":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.ADMIN_UPDATE_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    Administrator updateInfo = objectMapper.readValue(parts[1], Administrator.class);
+                    Integer adminId = (Integer) session.getAttributes().get("adminId");
+                    adminService.updateAdmin(adminId, updateInfo);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.ADMIN_UPDATE_SUCCESS.ordinal(),
+                            "更新成功",
+                            "message"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.ADMIN_UPDATE_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+
+            case "getAllUsers":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.GET_ALL_USERS_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    List<NormalUser> users = adminService.getAllUsers();
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.GET_ALL_USERS_SUCCESS.ordinal(),
+                            users,
+                            "data"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.GET_ALL_USERS_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+
+            case "blockUser":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.BLOCK_USER_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    Integer userId = Integer.parseInt(parts[1]);
+                    adminService.blockUser(userId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.BLOCK_USER_SUCCESS.ordinal(),
+                            "封禁成功",
+                            "message"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.BLOCK_USER_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+
+            case "unblockUser":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNBLOCK_USER_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    Integer userId = Integer.parseInt(parts[1]);
+                    adminService.unblockUser(userId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNBLOCK_USER_SUCCESS.ordinal(),
+                            "解封成功",
+                            "message"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNBLOCK_USER_FAIL.ordinal(),
+                            e.getMessage(),
                             "error_message"
                     )));
                 }
