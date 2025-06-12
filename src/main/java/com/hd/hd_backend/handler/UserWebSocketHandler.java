@@ -35,11 +35,11 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
     private AdminService adminService;
 
     private final ObjectMapper objectMapper = new ObjectMapper(); // 创建 ObjectMapper 实例
-//    private boolean isTestMode = false;
+    private boolean isTestMode = false;
 
-//    public void setTestMode(boolean testMode) {
-//        this.isTestMode = testMode;
-//    }
+    public void setTestMode(boolean testMode) {
+        this.isTestMode = testMode;
+    }
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         System.out.println("Received message: " + message.getPayload());
@@ -50,14 +50,14 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
         String[] parts = payload.split(":", 2); // 限制分割为 2 部分
         String action = parts[0];
 
-//        if (payload.contains("testModeOn")) {
-//            this.isTestMode = true;
-//            return;
-//        }
-//        if (payload.contains("testModeOff")) {
-//            this.isTestMode = false;
-//            return;
-//        }
+        if (payload.contains("testModeOn")) {
+            this.isTestMode = true;
+            return;
+        }
+        if (payload.contains("testModeOff")) {
+            this.isTestMode = false;
+            return;
+        }
 
         switch (action) {
             case "register":{
@@ -323,7 +323,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 }
                 break;
             case "addWeight":
-                if (!session.getAttributes().containsKey("userId")) {
+                if (!isTestMode&&!session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.WEIGHT_ADD_FAIL.ordinal(),
                             "用户未登录",
@@ -352,7 +352,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 }
                 break;
             case "deleteWeight":
-                if (!session.getAttributes().containsKey("userId")) {
+                if (!isTestMode&&!session.getAttributes().containsKey("userId")) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.WEIGHT_DELETE_FAIL.ordinal(), "用户未登录","error_message")));
                     break;
                 }
@@ -407,20 +407,15 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 break;
 
             case "getAllExerciseItem":
-                if(!session.getAttributes().containsKey("userId"))
-                {
-                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_FAIL.ordinal(),"用户未登录","error_message")) );
+                try {
+                    List<ExerciseItem> exercises= exerciseService.getAllExerciseItem();
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_SUCCESS.ordinal(),exercises,"data")) );
                 }
-                else{
-                    try {
-                        List<ExerciseItem> exercises= exerciseService.getAllExerciseItem();
-                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_SUCCESS.ordinal(),exercises,"data")) );
-                    }
-                    catch (Exception e) {
-                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_FAIL.ordinal(),"食物未找到","error_message")) );
-                    }
+                catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_LIST_FAIL.ordinal(),"获取失败","error_message")) );
+                }
 
-                }
+
                 break;
             case "addExerciseItem":
                 if(!session.getAttributes().containsKey("userId"))
@@ -482,13 +477,13 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
 
                         }
                         catch (Exception e) {
-                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"用户未登录","error_message")) );
+                            session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"获取失败","error_message")) );
                             System.out.println(e.getMessage());
 
                         }
                     }
                     else {
-                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"获取失败","error_message")) );
+                        session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_GET_FAIL.ordinal(),"缺少参数","error_message")) );
                     }
                 }
                 break;
@@ -504,7 +499,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     exerciseService.deleteExerciseRecord(recordId);
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_SUCCESS.ordinal(),  "运动记录删除成功","message")) );
                 } catch (Exception e) {
-                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), e.getMessage(), "error_message")));
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.EXERCISE_RECORD_DELETE_FAIL.ordinal(), "运动记录删除失败", "error_message")));
                 }
                 break;
 
