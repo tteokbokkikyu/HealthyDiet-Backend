@@ -24,6 +24,13 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private NotificationMapper notificationMapper;
 
+    @Autowired
+    private PostMapper postMapper;
+
+    @Autowired
+    private CommentMapper commentMapper;
+
+
     private void sendNotificationToUser(Integer userId, String message, Notification notification) {
         try {
             // 先保存通知到数据库
@@ -138,6 +145,83 @@ public class AdminServiceImpl implements AdminService {
 
         // 发送通知并根据发送状态更新sent字段
         sendNotificationToUser(userId, "您的账号已被管理员解封", notification);
+    }
+    @Override
+    public void offendPost(Integer postId) throws Exception {
+        Post post = postMapper.findById(postId);
+        if (post == null) {
+            throw new Exception("帖子不存在");
+        }
+        post.setIsOffending(1);
+        postMapper.updatePost(post);
+
+        Notification notification = new Notification();
+        notification.setUserId(post.getUserId());
+        String message = "您的帖子(标题:" + post.getTitle() + ")已被标记为违规";
+        notification.setData(message);
+        notification.setType(1);
+
+        sendNotificationToUser(post.getUserId(), message, notification);
+    }
+
+    @Override
+    public void unoffendPost(Integer postId) throws Exception {
+        Post post = postMapper.findById(postId);
+        if (post == null) {
+            throw new Exception("帖子不存在");
+        }
+        post.setIsOffending(0);
+        postMapper.updatePost(post);
+
+        Notification notification = new Notification();
+        notification.setUserId(post.getUserId());
+        String message = "您的帖子(标题:" + post.getTitle() + ")已被取消违规标记";
+        notification.setData(message);
+        notification.setType(1);
+        notificationMapper.insertNotification(notification);
+
+        // 实时推送消息
+        sendNotificationToUser(post.getUserId(), message, notification);
+    }
+
+    @Override
+    public void offendComment(Integer commentId) throws Exception {
+        Comment comment = commentMapper.findById(commentId);
+        if (comment == null) {
+            throw new Exception("评论不存在");
+        }
+        comment.setIsOffending(1);
+        commentMapper.updateComment(comment);
+
+        Notification notification = new Notification();
+        notification.setUserId(comment.getUserId());
+        String message = "您的评论(内容:" + comment.getContent().substring(0,10) + "...)已被标记为违规";
+        notification.setData(message);
+        notification.setType(1);
+        notificationMapper.insertNotification(notification);
+
+        // 实时推送消息
+        sendNotificationToUser(comment.getUserId(), message, notification);
+    }
+
+    @Override
+    public void unoffendComment(Integer commentId) throws Exception {
+        Comment comment = commentMapper.findById(commentId);
+        if (comment == null) {
+            throw new Exception("评论不存在");
+        }
+        comment.setIsOffending(0);
+        commentMapper.updateComment(comment);
+
+        Notification notification = new Notification();
+        notification.setUserId(comment.getUserId());
+        String message = "您的评论(内容:" + comment.getContent().substring(0,10) + "...)已被取消违规标记";
+        notification.setData(message);
+        notification.setType(1);
+        notificationMapper.insertNotification(notification);
+
+        // 实时推送消息
+        sendNotificationToUser(comment.getUserId(), message, notification);
     }
 
 }
