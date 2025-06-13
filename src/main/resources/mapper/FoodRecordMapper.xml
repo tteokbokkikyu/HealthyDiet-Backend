@@ -3,7 +3,7 @@
 <mapper namespace="com.hd.hd_backend.mapper.FoodRecordMapper">
 
     <select id="findByUserId" resultType="com.hd.hd_backend.dto.FoodRecordDTO">
-        SELECT
+        SELECT 
             fr.food_record_id as foodRecordId,
             fr.record_time as recordTime,
             fr.user_id as userId,
@@ -18,12 +18,12 @@
             fr.dietary_fiber as dietaryFiber,
             fi.name as foodname
         FROM food_record fr
-                 LEFT JOIN food_item fi ON fr.food_id = fi.foodid
+        LEFT JOIN food_item fi ON fr.food_id = fi.foodid
         WHERE fr.user_id = #{userId}
     </select>
 
     <select id="findById" resultType="com.hd.hd_backend.dto.FoodRecordDTO">
-        SELECT
+        SELECT 
             fr.food_record_id as foodRecordId,
             fr.record_time as recordTime,
             fr.user_id as userId,
@@ -38,7 +38,7 @@
             fr.dietary_fiber as dietaryFiber,
             fi.name as foodname
         FROM food_record fr
-                 LEFT JOIN food_item fi ON fr.food_id = fi.foodid
+        LEFT JOIN food_item fi ON fr.food_id = fi.foodid
         WHERE fr.food_record_id = #{foodRecordId}
     </select>
 
