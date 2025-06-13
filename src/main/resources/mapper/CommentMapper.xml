@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hd.hd_backend.mapper.CommentMapper">
+    <insert id="insertComment" parameterType="com.hd.hd_backend.entity.Comment">
+        INSERT INTO comment (user_id, post_id, content, timestamp, is_offending)
+        VALUES (#{userId}, #{postId}, #{content}, #{timestamp}, #{isOffending})
+    </insert>
+
+    <delete id="deleteComment">
+        DELETE FROM comment WHERE comment_id = #{commentId}
+    </delete>
+
+    <update id="updateComment" parameterType="com.hd.hd_backend.entity.Comment">
+        UPDATE comment
+        SET content = #{content},
+            is_offending = #{isOffending}
+        WHERE comment_id = #{commentId}
+    </update>
+
+    <select id="getPostComments" resultType="com.hd.hd_backend.dto.CommentDTO">
+        SELECT c.*, u.name as commentUserName, u.profile_picture as commentUserProfilePicture
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id 
+        WHERE c.post_id = #{postId} AND c.is_offending = 0
+    </select>
+
+    <select id="getUserComments" resultType="com.hd.hd_backend.dto.CommentDTO">
+        SELECT c.*, u.name as commentUserName, u.profile_picture as commentUserProfilePicture
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id 
+        WHERE c.user_id = #{userId}
+    </select>
+
+    <select id="getAllComments" resultType="com.hd.hd_backend.dto.CommentDTO">
+        SELECT c.*, u.name as commentUserName, u.profile_picture as commentUserProfilePicture
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id 
+        ORDER BY c.timestamp DESC
+    </select>
+
+    <select id="findById" resultType="com.hd.hd_backend.entity.Comment">
+        SELECT * FROM comment WHERE comment_id = #{commentId}
+    </select>
+</mapper> 
