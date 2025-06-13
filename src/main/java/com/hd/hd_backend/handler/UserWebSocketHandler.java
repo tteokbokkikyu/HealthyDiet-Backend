@@ -33,7 +33,10 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
     private NotificationService notificationService;
     @Autowired
     private AdminService adminService;
-
+    @Autowired
+    private PostService postService;
+    @Autowired
+    private CommentService commentService;
     private final ObjectMapper objectMapper = new ObjectMapper(); // 创建 ObjectMapper 实例
     private boolean isTestMode = false;
 
@@ -749,6 +752,280 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                 } catch (Exception e) {
                     session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
                             WebSocketCode.UNBLOCK_USER_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+            case "createPost":
+                if ((!session.getAttributes().containsKey("userId"))&&(!session.getAttributes().containsKey("adminId"))) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_CREATE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Post post = objectMapper.readValue(parts[1], Post.class);
+                    if(session.getAttributes().containsKey("userId"))
+                        post.setUserId((Integer) session.getAttributes().get("userId"));
+                    else
+                        post.setUserId((Integer) session.getAttributes().get("adminId"));
+
+                    //post.setTimestamp(time);
+
+                    postService.createPost(post);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_CREATE_SUCCESS.ordinal(), "帖子创建成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_CREATE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "deletePost":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_DELETE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Integer postId = Integer.parseInt(parts[1]);
+                    postService.deletePost(postId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_DELETE_SUCCESS.ordinal(), "帖子删除成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_DELETE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "updatePost":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_UPDATE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Post post = objectMapper.readValue(parts[1], Post.class);
+                    postService.updatePost(post);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_UPDATE_SUCCESS.ordinal(), "帖子更新成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_UPDATE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "getVisiblePosts":
+                try {
+                    List<PostDTO> posts = postService.findVisiblePosts();
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_GET_SUCCESS.ordinal(), posts,"data")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "getUserPosts":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_GET_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Integer userId = (Integer) session.getAttributes().get("userId");
+                    List<PostDTO> posts = postService.findUserPosts(userId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_GET_SUCCESS.ordinal(), posts,"data")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.POST_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "createComment":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_CREATE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Comment comment = objectMapper.readValue(parts[1], Comment.class);
+                    comment.setUserId((Integer) session.getAttributes().get("userId"));
+
+                    commentService.createComment(comment);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_CREATE_SUCCESS.ordinal(), "评论创建成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_CREATE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "deleteComment":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_DELETE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Integer commentId = Integer.parseInt(parts[1]);
+                    commentService.deleteComment(commentId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_DELETE_SUCCESS.ordinal(), "评论删除成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_DELETE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "updateComment":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_UPDATE_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Comment comment = objectMapper.readValue(parts[1], Comment.class);
+                    commentService.updateComment(comment);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_UPDATE_SUCCESS.ordinal(), "评论更新成功","message")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_UPDATE_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "getPostComments":
+                try {
+                    Integer postId = Integer.parseInt(parts[1]);
+                    List<CommentDTO> comments = commentService.getPostComments(postId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_GET_SUCCESS.ordinal(), comments,"data")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "getUserComments":
+                if (!session.getAttributes().containsKey("userId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_GET_FAIL.ordinal(), "用户未登录","error_message")));
+                    break;
+                }
+                try {
+                    Integer userId = (Integer) session.getAttributes().get("userId");
+                    List<CommentDTO> comments = commentService.getUserComments(userId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_GET_SUCCESS.ordinal(), comments,"data")));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(WebSocketCode.COMMENT_GET_FAIL.ordinal(), e.getMessage(),"error_message")));
+                }
+                break;
+            case "getAllComments":
+                try {
+                    List<CommentDTO> comments = commentService.getAllComments();
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode. COMMENT_GET_ALL_SUCCESS.ordinal(),
+                            comments,
+                            "data"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.COMMENT_GET_ALL_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+            case "offendPost":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.OFFEND_POST_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    Integer postId = Integer.parseInt(parts[1]);
+                    adminService.offendPost(postId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.OFFEND_POST_SUCCESS.ordinal(),
+                            "帖子已标记违规",
+                            "message"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.OFFEND_POST_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+
+            case "unoffendPost":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNOFFEND_POST_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    Integer postId = Integer.parseInt(parts[1]);
+                    adminService.unoffendPost(postId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNOFFEND_POST_SUCCESS.ordinal(),
+                            "帖子已解封",
+                            "message"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNOFFEND_POST_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+
+            case "offendComment":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.OFFEND_COMMENT_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    Integer commentId = Integer.parseInt(parts[1]);
+                    adminService.offendComment(commentId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.OFFEND_COMMENT_SUCCESS.ordinal(),
+                            "评论已标记违规",
+                            "message"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.OFFEND_COMMENT_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+
+            case "unoffendComment":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNOFFEND_COMMENT_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    Integer commentId = Integer.parseInt(parts[1]);
+                    adminService.unoffendComment(commentId);
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNOFFEND_COMMENT_SUCCESS.ordinal(),
+                            "评论已解封",
+                            "message"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.UNOFFEND_COMMENT_FAIL.ordinal(),
+                            e.getMessage(),
+                            "error_message"
+                    )));
+                }
+                break;
+
+            case "getAllPosts":
+                if (!session.getAttributes().containsKey("adminId")) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.POST_GET_FAIL.ordinal(),
+                            "管理员未登录",
+                            "error_message"
+                    )));
+                    break;
+                }
+                try {
+                    List<PostDTO> allPosts = postService.getAllPosts();
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.POST_GET_ALL_SUCCESS.ordinal(),
+                            allPosts,
+                            "data"
+                    )));
+                } catch (Exception e) {
+                    session.sendMessage(new TextMessage(JsonUtils.toJsonMsg(
+                            WebSocketCode.POST_GET_ALL_FAIL.ordinal(),
                             e.getMessage(),
                             "error_message"
                     )));
