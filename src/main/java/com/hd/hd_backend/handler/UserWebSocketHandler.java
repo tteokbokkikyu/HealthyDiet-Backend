@@ -523,7 +523,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
                     // 调用百度API识别菜品
                     String result = APICaller.identifyDish(imageBase64, 1);  // 只取置信度最高的结果
                     JSONObject jsonResult = new JSONObject(result);
-
+                    System.out.println(jsonResult.toString());
                     if (jsonResult.has("result") && jsonResult.getJSONArray("result").length() > 0) {
                         JSONObject dish = jsonResult.getJSONArray("result").getJSONObject(0);
                         String dishName = dish.getString("name");
